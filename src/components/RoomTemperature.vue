@@ -1,144 +1,125 @@
-
-  
-  <template>
+<template>
   <div class="flex justify-between items-center mr-5">
-            <div></div>
-  <button class="w-36 h-10 justify-end bg-black  hover:bg-slate-800 rounded-lg border border-black text-center text-white"
-  @click="fetchData">
-    <h6 class="text-center text-white">Refresh Data</h6>
-  </button>
-          </div>
+    <div></div>
+    <button
+      class="w-36 h-10 justify-end bg-black hover:bg-slate-800 rounded-lg border border-black text-center text-white"
+      @click="fetchData"
+    >
+      <h6 class="text-center text-white">Refresh Data</h6>
+    </button>
+  </div>
 
   <div class="bg-white ml-4 pl-2 rounded-lg">
-    <!-- Main Content Grid -->
-
     <div class="grid grid-cols-2 gap-4 text-center">
-
       <!-- Temperature Section -->
       <div class="p-4 bg-sky-100 rounded-lg border border-black shadow-md">
-        <p class="text-sm text-black uppercase tracking-wide font-medium">temp</p>
-        <p class="text-4xl font-extrabold text-black"> {{ temperature }} °C</p>
-        <div id="humidity-chart" class="mt-4">
-          <canvas ref="humidityChart"></canvas>
-        </div>
-        <div class="grid grid-cols-1 items-center border-gray-200 border-t dark:border-gray-700 justify-between">
-          <div class="flex justify-between items-center pt-5">
-            <button id="dropdownDefaultButton" data-dropdown-toggle="lastDaysdropdown" data-dropdown-placement="bottom"
-              class="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 text-center inline-flex items-center dark:hover:text-white"
-              type="button">
-              Last 7 days
-              <svg class="w-2.5 m-2.5 ms-1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
-                viewBox="0 0 10 6">
-                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="m1 1 4 4 4-4" />
-              </svg>
-            </button>
-            <a href="#"
-              class="uppercase text-sm font-semibold inline-flex items-center rounded-lg text-blue-600 hover:text-blue-700 dark:hover:text-blue-500 hover:bg-gray-100 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700 px-3 py-2">
-              Humidity Report
-              <svg class="w-2.5 h-2.5 ms-1.5 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                fill="none" viewBox="0 0 6 10">
-                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="m1 9 4-4-4-4" />
-              </svg>
-            </a>
-          </div>
+        <p class="text-sm text-black uppercase tracking-wide font-medium">Temperature</p>
+        <p class="text-4xl font-extrabold text-black">{{ temperature }} °C</p>
+        <canvas ref="temperatureChart"></canvas>
+        <div class="pt-5 text-blue-600 text-sm font-semibold cursor-pointer">
+          Temperature Report →
         </div>
       </div>
 
       <!-- Humidity Section -->
-      <div class="p-4 bg-sky-100 rounded-lg border border-black shadow-md mr-5">
+      <div class="p-4 bg-sky-100 rounded-lg border border-black shadow-md">
         <p class="text-sm text-black uppercase tracking-wide font-medium">Humidity</p>
         <p class="text-4xl font-extrabold text-black">{{ humidity }} %</p>
-        <div id="humidity-chart" class="mt-4">
-          <canvas ref="humidityChart"></canvas>
-        </div>
-        <div class="grid grid-cols-1 items-center border-gray-200 border-t dark:border-gray-700 justify-between">
-          <div class="flex justify-between items-center pt-5">
-            <button id="dropdownDefaultButton" data-dropdown-toggle="lastDaysdropdown" data-dropdown-placement="bottom"
-              class="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 text-center inline-flex items-center dark:hover:text-white"
-              type="button">
-              Last 7 days
-              <svg class="w-2.5 m-2.5 ms-1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
-                viewBox="0 0 10 6">
-                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="m1 1 4 4 4-4" />
-              </svg>
-            </button>
-            <a href="#"
-              class="uppercase text-sm font-semibold inline-flex items-center rounded-lg text-blue-600 hover:text-blue-700 dark:hover:text-blue-500 hover:bg-gray-100 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700 px-3 py-2">
-              Humidity Report
-              <svg class="w-2.5 h-2.5 ms-1.5 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                fill="none" viewBox="0 0 6 10">
-                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="m1 9 4-4-4-4" />
-              </svg>
-            </a>
-          </div>
+        <canvas ref="humidityChart"></canvas>
+        <div class="pt-5 text-blue-600 text-sm font-semibold cursor-pointer">
+          Humidity Report →
         </div>
       </div>
-
     </div>
-
-
-
-    <!-- Error Message -->
-    <div class="mt-4 mb-3 text-sm text-red-700 text-center"></div>
   </div>
 </template>
 
-
 <script>
-import { ref, onMounted } from "vue";
-import { database } from "../config";
-import { get, ref as dbRef } from "firebase/database";
+import { ref, onMounted, nextTick } from "vue";
+import { get } from "firebase/database";
+import { ref as dbRef } from "firebase/database";
+import { database } from "../config"; 
+import Chart from "chart.js/auto";
 
 export default {
   setup() {
-    const temperature = ref("...");
-    const humidity = ref("...");
-    const errorMessage = ref("");
+    const temperature = ref(0);
+    const humidity = ref(0);
+    const temperatureChart = ref(null);
+    const humidityChart = ref(null);
+    let tempChartInstance = null;
+    let humChartInstance = null;
 
+    // Fetch Data from Firebase
     const fetchData = async () => {
       try {
-        const tempSnapshot = await get(dbRef(database, "sensorData/temperature"));
-        if (tempSnapshot.exists()) {
+        const tempSnapshot = await get(dbRef(database, "/sensorData/temperature"));
+        const humSnapshot = await get(dbRef(database, "/sensorData/humidity"));
+
+        if (tempSnapshot.exists() && humSnapshot.exists()) {
+          // Update displayed values
           temperature.value = tempSnapshot.val();
-        } else {
-          temperature.value = "N/A";
-        }
+          humidity.value = humSnapshot.val();
 
-        
-        const humiditySnapshot = await get(dbRef(database, "sensorData/humidity"));
-        if (humiditySnapshot.exists()) {
-          humidity.value = humiditySnapshot.val();
-        } else {
-          humidity.value = "N/A";
+          // Ensure DOM updates before drawing charts
+          await nextTick();
+          updateCharts();
         }
-
-        errorMessage.value = ""; // Clear error message on successful fetch
       } catch (error) {
         console.error("Error fetching data:", error);
-        errorMessage.value = "Failed to fetch data. Please try again.";
       }
     };
 
-    // Fetch data when component is mounted
+    // Update Charts
+    const updateCharts = () => {
+      if (!temperatureChart.value || !humidityChart.value) return;
+
+      // Destroy existing charts before creating new ones
+      if (tempChartInstance) tempChartInstance.destroy();
+      if (humChartInstance) humChartInstance.destroy();
+
+      // Create Temperature Chart
+      tempChartInstance = new Chart(temperatureChart.value.getContext("2d"), {
+        type: "line",
+        data: {
+          labels: ["Now"],
+          datasets: [
+            {
+              label: "Temperature (°C)",
+              data: [temperature.value],
+              borderColor: "red",
+              backgroundColor: "rgba(255, 0, 0, 0.2)",
+            },
+          ],
+        },
+      });
+
+      // Create Humidity Chart
+      humChartInstance = new Chart(humidityChart.value.getContext("2d"), {
+        type: "line",
+        data: {
+          labels: ["Now"],
+          datasets: [
+            {
+              label: "Humidity (%)",
+              data: [humidity.value],
+              borderColor: "blue",
+              backgroundColor: "rgba(0, 0, 255, 0.2)",
+            },
+          ],
+        },
+      });
+    };
+
     onMounted(fetchData);
 
     return {
+      fetchData,
       temperature,
       humidity,
-      fetchData,
-      errorMessage,
+      temperatureChart,
+      humidityChart,
     };
   },
 };
 </script>
-
-
-
-
-
-
-
